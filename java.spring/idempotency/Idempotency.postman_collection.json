@@ -1,0 +1,75 @@
+{
+	"info": {
+		"_postman_id": "cbe11723-17ff-42c8-ac34-be9575c49875",
+		"name": "Idempotency",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24144233"
+	},
+	"item": [
+		{
+			"name": "Create order #1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var orderId;\r",
+							"pm.test(\"Create order #1\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"    orderId = pm.response.headers.get(\"X-Order-Id\");\r",
+							"});\r",
+							"postman.setEnvironmentVariable(\"orderId\", orderId);\r",
+							"console.log(\"request: \" + request.data);\r",
+							"console.log(\"response: \" + orderId);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Host",
+						"type": "text",
+						"value": "{{baseUrl}}"
+					},
+					{
+						"key": "X-Request-Id",
+						"value": "{{requestId}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"TV\",\r\n    \"price\": 300,\r\n    \"description\": \"Акция! Шутки по супер цене #{{requestId}} 1+1=3\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://{{baseUrl}}/order",
+					"protocol": "http",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"order"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
