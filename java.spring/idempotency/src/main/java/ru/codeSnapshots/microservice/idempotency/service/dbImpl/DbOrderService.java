@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -18,12 +19,12 @@ import ru.codeSnapshots.microservice.idempotency.service.OrderService;
 public class DbOrderService implements OrderService {
 
     private final OrderRepository orderRepository;
-    private final TransactionTemplate transactionTemplate;
+    private final PlatformTransactionManager transactionManager;
     private final IdempotencySidecarService idempotencySidecarService;
 
     @Autowired
     public DbOrderService(OrderRepository orderRepository, PlatformTransactionManager transactionManager, IdempotencySidecarService idempotencySidecarService) {
-        this.transactionTemplate = new TransactionTemplate(transactionManager);
+        this.transactionManager = transactionManager;
         this.orderRepository = orderRepository;
         this.idempotencySidecarService = idempotencySidecarService;
     }
@@ -31,6 +32,9 @@ public class DbOrderService implements OrderService {
     @Override
     public String create(Order order, String requestId) {
         try {
+            TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+            transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED);
+
             return transactionTemplate.execute(new TransactionCallback<String>() {
                 public String doInTransaction(TransactionStatus status) {
                     return idempotencySidecarService.register(requestId, () -> CreateOrder(order));
